@@ -24,7 +24,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         let lb = UILabel()
         lb.text = "Please add a picture!"
         lb.textAlignment = .center
-        lb.textColor = .magenta
+        lb.textColor = .black
         lb.font = .systemFont(ofSize: 30)
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
@@ -33,8 +33,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     private let firstAnswer : UILabel = {
         let lb = UILabel()
         lb.text = "C вероятностью 55% на фото банан"
-        lb.textColor = .magenta
-        lb.font = .systemFont(ofSize: 22)
+        lb.textColor = .white
+        lb.textAlignment = .center
+        lb.numberOfLines = 0
+        lb.font = .systemFont(ofSize: 20)
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
     }()
@@ -42,8 +44,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     private let secondAnswer : UILabel = {
         let lb = UILabel()
         lb.text = "C вероятностью 22% на фото огурец"
-        lb.textColor = .magenta
-        lb.font = .systemFont(ofSize: 22)
+        lb.textColor = .white
+        lb.textAlignment = .center
+        lb.numberOfLines = 0
+        lb.font = .systemFont(ofSize: 20)
         lb.translatesAutoresizingMaskIntoConstraints = false
         return lb
     }()
@@ -56,7 +60,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     private let selectedImage : UIImageView = {
         let place = UIImageView()
-        
+        place.image = UIImage(named: "selectPhoto")
         place.translatesAutoresizingMaskIntoConstraints = false
         return place
     }()
@@ -97,6 +101,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         configurePicker()
         addSubviews()
         setConstraints()
+        firstAnswer.isHidden = true
+        secondAnswer.isHidden = true
     }
     
     // MARK: - Delegate Methods
@@ -138,8 +144,24 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
         let request = VNCoreMLRequest(model: model) {(request, error) in
             let result = request.results as? [VNClassificationObservation]
-            print(result?.first?.identifier)
-            print(result?.first?.confidence)
+            if let posibility = result?.first?.confidence, let answer = result?.first?.identifier {
+                
+                var transferPosibility = Double(posibility)
+                transferPosibility *= 100
+                let currentPercent = Int(transferPosibility)
+                
+                self.firstAnswer.text = "With posibility of \(currentPercent)% it may be \(answer)"
+                self.firstAnswer.isHidden = false
+            }
+            if let secondPosibility = result?[1].confidence , let secondAnswer = result?[1].identifier {
+                
+                var transferPosibility = Double(secondPosibility)
+                transferPosibility *= 100
+                let currentPercent = Int(transferPosibility)
+                
+                self.secondAnswer.text = "Also it can be \(secondAnswer) with chanse of \(currentPercent)%"
+                self.secondAnswer.isHidden = false
+            }
         }
         
         let handler = VNImageRequestHandler(ciImage: image)
@@ -155,19 +177,30 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     private func addSubviews() {
         view.addSubview(backgroundImg)
-        view.addSubview(mainStackView)
-        mainStackView.addArrangedSubview(mainTitleLabel)
-        mainStackView.addArrangedSubview(firstAnswer)
-        mainStackView.addArrangedSubview(secondAnswer)
-        mainStackView.addArrangedSubview(selectedImage)
+        view.addSubview(mainTitleLabel)
+        view.addSubview(firstAnswer)
+        view.addSubview(secondAnswer)
+        view.addSubview(selectedImage)
     }
     
     private func setConstraints() {
         NSLayoutConstraint.activate([
-            mainStackView.topAnchor.constraint(equalTo: view.topAnchor, constant: 80),
-            mainStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            mainStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            mainStackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+            mainTitleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 120),
+            mainTitleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            mainTitleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            firstAnswer.topAnchor.constraint(equalTo: mainTitleLabel.bottomAnchor, constant: 20),
+            firstAnswer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            firstAnswer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            secondAnswer.topAnchor.constraint(equalTo: firstAnswer.bottomAnchor, constant: 20),
+            secondAnswer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            secondAnswer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            selectedImage.topAnchor.constraint(equalTo: secondAnswer.bottomAnchor, constant: 60),
+            selectedImage.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30),
+            selectedImage.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
+            selectedImage.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -140)
         ])
     }
 }
